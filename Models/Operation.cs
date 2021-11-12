@@ -8,12 +8,12 @@ using Issuer.Data;
 
 namespace Issuer.Models
 {
-    public class Endpoint
+    public class Operation
     {
 
         public int ID { get; set; }
-        public string URI { get; set; }
         public string Name { get; set; }
+        public string OperationId { get; set; }
         public string OwnerId { get; set; }
         public int ResourceID { get; set; }
         public Resource Resource { get; set; }

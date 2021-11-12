@@ -203,7 +203,7 @@ namespace Issuer.Controllers
         private String createJWT(String userId, int clientId)
         {
             var authorizations = _context.Authorization
-                .Include(a => a.Client).Include(b => b.Endpoint).Include(c=>c.Endpoint.Resource)
+                .Include(a => a.Client).Include(b => b.Operation).Include(c=>c.Operation.Resource)
                 .Where(q => q.ClientID == clientId && q.OwnerId == userId).ToList();
             string privateKey = _configuration["jws_private_key_pem"];
             ECDsa ecdsa = ECDsa.Create();
@@ -218,9 +218,9 @@ namespace Issuer.Controllers
             var capabilities = new Dictionary<string, List<String>>();
             foreach (var authorization in authorizations)
             {
-                if (!capabilities.ContainsKey(authorization.Endpoint.Resource.Name))
-                    capabilities.Add(authorization.Endpoint.Resource.Name, new List<string>());
-                capabilities[authorization.Endpoint.Resource.Name].Add(authorization.Endpoint.URI);
+                if (!capabilities.ContainsKey(authorization.Operation.Resource.Name))
+                    capabilities.Add(authorization.Operation.Resource.Name, new List<string>());
+                capabilities[authorization.Operation.Resource.Name].Add(authorization.Operation.OperationId);
 
             }
             payload.Add("capabilities", capabilities);
@@ -232,7 +232,7 @@ namespace Issuer.Controllers
             var claims = new List<Claim>();
             foreach (var authorization in authorizations)
             {
-                claims.Add(new Claim("operations", authorization.Endpoint.URI));
+                claims.Add(new Claim("operations", authorization.Operation.URI));
             }
             
 
