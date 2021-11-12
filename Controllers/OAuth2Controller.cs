@@ -41,7 +41,7 @@ namespace Issuer.Controllers
             }
 
             // Check if rederict_uri is allowed
-            var redirectURI = _context.RedirectURI.Include(a => a.Client).IgnoreQueryFilters()
+            var redirectURI = _context.RedirectURI.Include(a => a.Client)
                 .Where(q => q.OwnerId == userId && q.Client.ClientId == client_id && q.URI == redirect_uri).FirstOrDefault();
             if (redirectURI == null)
             {
@@ -51,7 +51,7 @@ namespace Issuer.Controllers
             if (response_type == "code")
             {
                 // Check if there is still an active authorization code
-                var client = _context.Client.IgnoreQueryFilters()
+                var client = _context.Client
                     .Where(q => q.ClientId == client_id && q.OwnerId == userId).FirstOrDefault();
                 if (client == null)
                 {
@@ -126,7 +126,7 @@ namespace Issuer.Controllers
 
         private (bool, int) authenticateClient(String userId, String client_id, String client_secret)
         {
-            var client = _context.Client.IgnoreQueryFilters().Where(q => q.OwnerId == userId && q.ClientId == client_id && q.ClientSecret == client_secret).FirstOrDefault();
+            var client = _context.Client.Where(q => q.OwnerId == userId && q.ClientId == client_id && q.ClientSecret == client_secret).FirstOrDefault();
             if (client != null)
                 return (true, client.ID);
             else
@@ -140,7 +140,7 @@ namespace Issuer.Controllers
          */
         private bool authorizeClient(String userId, String client_id)
         {
-            var client = _context.Client.IgnoreQueryFilters().Where(q => q.OwnerId == userId && q.ClientId == client_id).FirstOrDefault();
+            var client = _context.Client.Where(q => q.OwnerId == userId && q.ClientId == client_id).FirstOrDefault();
             return client != null;
    
         }
@@ -170,7 +170,7 @@ namespace Issuer.Controllers
                 var header = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
                 string[] credentials = Encoding.UTF8.GetString(Convert.FromBase64String(header.Parameter)).Split(":");
 
-                var client = _context.Client.IgnoreQueryFilters().Where(q => q.OwnerId == userId && q.ClientId == credentials[0] && q.ClientSecret == credentials[1]).FirstOrDefault();
+                var client = _context.Client.Where(q => q.OwnerId == userId && q.ClientId == credentials[0] && q.ClientSecret == credentials[1]).FirstOrDefault();
                 if (client != null)
                     return (true, client.ID);
                 else
@@ -202,7 +202,7 @@ namespace Issuer.Controllers
 
         private String createJWT(String userId, int clientId)
         {
-            var authorizations = _context.Authorization.IgnoreQueryFilters()
+            var authorizations = _context.Authorization
                 .Include(a => a.Client).Include(b => b.Endpoint).Include(c=>c.Endpoint.Resource)
                 .Where(q => q.ClientID == clientId && q.OwnerId == userId).ToList();
             string privateKey = _configuration["jws_private_key_pem"];
