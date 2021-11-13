@@ -27,7 +27,7 @@ The VC issuer requires the following tables in your database
 You can generate this table using the following SQL code
 
 ```sql
-CREATE TABLE `client` (
+CREATE TABLE `Client` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` text,
   `ClientId` text,
@@ -48,7 +48,7 @@ CREATE TABLE `client` (
 You can generate this table using the following SQL code
 
 ```sql
-CREATE TABLE `resource` (
+CREATE TABLE `Resource` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` text NOT NULL,
   `OwnerId` text,
@@ -68,7 +68,7 @@ CREATE TABLE `resource` (
 You can generate this table using the following SQL code
 
 ```sql
-CREATE TABLE `operation` (
+CREATE TABLE `Operation` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` text NOT NULL,
   `OperationId` text NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE `operation` (
 You can generate this table using the following SQL code
 
 ```sql
-CREATE TABLE `authorization` (
+CREATE TABLE `Authorization` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `OwnerId` text,
   `ClientID` int(11) NOT NULL,
@@ -120,6 +120,21 @@ Edit the `appsettings.json` file and add a connection string for the MySQL datab
 "Server=localhost;Database=issuer;User=issuer-user;Password=issuer-password;"
 ```
 
+Additionally you need to specify in `appsettings.json` a private key that can
+be used for singing tokens. Such a key can be generated with openssl using the
+following command.
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out key.pem
+```
+
+
+**Be careful** you have to put the output of the command in a single line, replacing
+line breaks with '\n', e.g.,
+
+```
+"jws_private_key_pem": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIHCw ...
+```
 
 ### Compile and run
 You can open the source code in Visual Studio or you can use .net sdk to compile it.
@@ -130,9 +145,16 @@ the source code, from the project folder execute:
 dotnet build
 ```
 
-
 In order to run the compiled file, from the project folder execute:
 
 ```bash
 dotnet run
+```
+
+If you have used the provided SQL commands for filling the database with
+test records, you can test that everything works by requesting a token using
+the following `curl` command
+
+```bash
+curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" https://localhost:5001/oauth2/token/mmlab
 ```
