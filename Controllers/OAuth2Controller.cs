@@ -124,6 +124,34 @@ namespace Issuer.Controllers
             return Unauthorized();
         }
 
+        [Route("oauth2/issue/{userId?}")]
+        [HttpPost]
+        public IActionResult issue(String userId, String grant_type)
+        {
+            if (userId == null || grant_type == null)
+            {
+                return Unauthorized();
+            }
+
+            if (grant_type == "client_credentials")
+            {
+                (bool isauthorized, int clientId) = authorizeClient(userId);
+                if (isauthorized)
+                {
+                    string jwt = createVC(userId, clientId);
+                    var response = new Dictionary<string, string>()
+                    {
+                        { "access_token", jwt},
+                        { "token_type","bearer" },
+                        { "expires_in","3600" },
+                    };
+                    return Ok(response);
+                }
+            }
+
+            return Unauthorized();
+        }
+
         private (bool, int) authenticateClient(String userId, String client_id, String client_secret)
         {
             var client = _context.Client.Where(q => q.OwnerId == userId && q.ClientId == client_id && q.ClientSecret == client_secret).FirstOrDefault();
@@ -214,7 +242,9 @@ namespace Issuer.Controllers
 
             var iat = DateTime.UtcNow;
             var exp = DateTime.UtcNow.AddDays(1);
-            var payload = new JwtPayload(null, "", new List<Claim>(), iat, exp);
+            var iss = "https://as.controlthings.gr";
+            var payload = new JwtPayload(iss, userId, new List<Claim>(), iat, exp);
+
             var capabilities = new Dictionary<string, List<String>>();
             foreach (var authorization in authorizations)
             {
@@ -250,6 +280,48 @@ namespace Issuer.Controllers
 
             return jwt;
             */
+        }
+
+        private String createVC(String userId, int clientId)
+        {
+            var authorizations = _context.Authorization
+                .Include(a => a.Client).Include(b => b.Operation).Include(c => c.Operation.Resource)
+                .Where(q => q.ClientID == clientId && q.OwnerId == userId).ToList();
+            string privateKey = _configuration["jws_private_key_pem"];
+            ECDsa ecdsa = ECDsa.Create();
+            ecdsa.ImportFromPem(privateKey);
+            var signingCredentials = new SigningCredentials(
+                key: new ECDsaSecurityKey(ecdsa),
+                algorithm: SecurityAlgorithms.EcdsaSha256);
+
+            var iat = DateTime.UtcNow;
+            var exp = DateTime.UtcNow.AddDays(1);
+            var iss = _configuration["iss_url"];
+            var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
+            var capabilities = new Dictionary<string, List<String>>();
+            foreach (var authorization in authorizations)
+            {
+                if (!capabilities.ContainsKey(authorization.Operation.Resource.Name))
+                    capabilities.Add(authorization.Operation.Resource.Name, new List<string>());
+                capabilities[authorization.Operation.Resource.Name].Add(authorization.Operation.OperationId);
+
+            }
+            var vc = new Dictionary<String, Object>()
+            {
+                {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://mm.aueb.gr/contexts/capabilities/v1"}},
+                {"type", new String[]{ "VerifiableCredential", "CapabilitiesCredential"} },
+                {
+                    "credentialSubject", new Dictionary<String, Object>()
+                    {
+                        {"capabilities",capabilities}
+                    } 
+                }
+
+            };
+            payload.Add("vc", vc);
+            var jwtToken = new JwtSecurityToken(new JwtHeader(signingCredentials), payload);
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            return jwtTokenHandler.WriteToken(jwtToken);
         }
     }
 }

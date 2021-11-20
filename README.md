@@ -128,7 +128,6 @@ following command.
 openssl ecparam -name prime256v1 -genkey -noout -out key.pem
 ```
 
-
 **Be careful** you have to put the output of the command in a single line, replacing
 line breaks with '\n', e.g.,
 
@@ -136,6 +135,8 @@ line breaks with '\n', e.g.,
 "jws_private_key_pem": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIHCw ...
 ```
 
+Finally, you have to specify in `appsettings.json` your issuer identifier (e.g., the
+URL of your issuer).
 ### Compile and run
 You can open the source code in Visual Studio or you can use .net sdk to compile it.
 Instructions for compiling and running the project follow. In order to compile
@@ -156,5 +157,5 @@ test records, you can test that everything works by requesting a token using
 the following `curl` command
 
 ```bash
-curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" https://localhost:5001/oauth2/token/mmlab
+curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" https://localhost:5001/oauth2/issue/mmlab
 ```
