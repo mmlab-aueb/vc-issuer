@@ -128,6 +128,13 @@ following command.
 openssl ecparam -name prime256v1 -genkey -noout -out key.pem
 ```
 
+You can generate the corresponding public key (and use it for example in 
+[VC verifier](https://github.com/mmlab-aueb/py-verifier)) using the following command
+
+```bash
+openssl ec -in key.pem -pubout -out public.pem
+```
+
 **Be careful** you have to put the output of the command in a single line, replacing
 line breaks with '\n', e.g.,
 
