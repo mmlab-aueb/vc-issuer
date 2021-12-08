@@ -164,5 +164,9 @@ test records, you can test that everything works by requesting a token using
 the following `curl` command
 
 ```bash
-curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" https://localhost:5001/oauth2/issue/mmlab
+curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" http://localhost:5001/oauth2/issue/mmlab
 ```
+
+*ΝΟΤΕ*
+VC issuer should be installed behind a proxy, which will support HTTPS (see
+for example the instructions [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-apache?view=aspnetcore-5.0)).
