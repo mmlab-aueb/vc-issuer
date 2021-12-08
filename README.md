@@ -167,6 +167,7 @@ the following `curl` command
 curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" http://localhost:5001/oauth2/issue/mmlab
 ```
 
-*ΝΟΤΕ*
+**ΝΟΤΕ**
+
 VC issuer should be installed behind a proxy, which will support HTTPS (see
 for example the instructions [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-apache?view=aspnetcore-5.0)).
