@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -136,14 +137,14 @@ namespace Issuer.Controllers
             if (grant_type == "client_credentials")
             {
                 (bool isauthorized, int clientId) = authorizeClient(userId);
-                if (isauthorized)
+                (bool isauthenticated, object clientKey) = handleDPoP();
+                if (isauthorized && isauthenticated)
                 {
-                    string jwt = createVC(userId, clientId);
+                    handleDPoP();
+                    string vc = createVC(userId, clientId, clientKey);
                     var response = new Dictionary<string, string>()
                     {
-                        { "access_token", jwt},
-                        { "token_type","bearer" },
-                        { "expires_in","3600" },
+                        { "vc", vc},
                     };
                     return Ok(response);
                 }
@@ -208,6 +209,40 @@ namespace Issuer.Controllers
             {
                 return (false, 0);
             }
+        }
+
+        /*
+         * It checks if DPoP header is present.
+         * If there is no DPoP header it returns true
+         * If there is a valid DPoP header it returns true and the client key
+         * If ther is an invlaid DPoP header it returns false
+         */
+        private (bool, Object) handleDPoP()
+        {
+            try
+            {
+                var dpop_header = Request.Headers["DPoP"];
+                if (dpop_header.IsNullOrEmpty()) return (true, null);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var dpop = tokenHandler.ReadJwtToken(dpop_header);
+                string clietKeyJSON = dpop.Header.First(q => q.Key == "jwk").Value.ToString();
+                var clietJWK = new JsonWebKey(clietKeyJSON);
+                var validationParameters = new TokenValidationParameters()
+                {
+                    IssuerSigningKey = clietJWK,
+                    ValidateLifetime = false, 
+                    ValidateAudience = false,
+                    ValidateIssuer = false
+                };
+
+                tokenHandler.ValidateToken(dpop_header, validationParameters, out _);
+                return (true, dpop.Header.First(q => q.Key == "jwk").Value);
+            }
+            catch (Exception)
+            {
+                return (false, null);
+            }
+
         }
 
         private String createAuthorizationCode(String userId, int clientId, String redirect_uri)
@@ -282,7 +317,7 @@ namespace Issuer.Controllers
             */
         }
 
-        private String createVC(String userId, int clientId)
+        private String createVC(String userId, int clientId, Object clientKey= null)
         {
             var authorizations = _context.Authorization
                 .Include(a => a.Client).Include(b => b.Operation).Include(c => c.Operation.Resource)
@@ -297,7 +332,8 @@ namespace Issuer.Controllers
             var iat = DateTime.UtcNow;
             var exp = DateTime.UtcNow.AddDays(1);
             var iss = _configuration["iss_url"];
-            var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
+            //var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
+            var payload = new JwtPayload(iss, null, new List<Claim>(),null, null);
             var capabilities = new Dictionary<string, List<String>>();
             foreach (var authorization in authorizations)
             {
@@ -318,6 +354,10 @@ namespace Issuer.Controllers
                 }
 
             };
+            if (clientKey != null)
+            {
+                payload.Add("cnf", clientKey);
+            }
             payload.Add("vc", vc);
             var jwtToken = new JwtSecurityToken(new JwtHeader(signingCredentials), payload);
             var jwtTokenHandler = new JwtSecurityTokenHandler();
