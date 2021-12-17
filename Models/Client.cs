@@ -16,8 +16,7 @@ namespace Issuer.Models
         public string ClientSecret { get; set; }
         public string OwnerId { get; set; }
         public ICollection<Authorization> Authorizations { get; set; }
-        public ICollection<RedirectURI> RedirectURIs { get; set; }
-        public OAuth2AuthorizationCode OAuth2AuthorizationCode { get; set; }
+
 
     }
 

@@ -19,7 +19,5 @@ namespace Issuer.Data
         public DbSet<Resource> Resource { get; set; }
         public DbSet<Client>   Client { get; set; }
         public DbSet<Authorization> Authorization { get; set; }
-        public DbSet<RedirectURI> RedirectURI { get; set; }
-        public DbSet<OAuth2AuthorizationCode> OAuth2AuthorizationCode { get; set; }
     }
 }

@@ -29,7 +29,7 @@ dpop.make_signed_token(client_key)
 
 # Prepare the request
 data    = "grant_type=client_credentials"
-issuer  =  "http://localhost:5001/oauth2/issue/mmlab" 
+issuer  =  "http://localhost:5000/oauth2/issue/mmlab" 
 auth    =  ("wallet","qwerty") 
 headers = {'Content-Type': 'application/x-www-form-urlencoded', 'DPoP':dpop.serialize()}
 response  = requests.post(issuer, auth=auth, headers = headers, data=data)

@@ -120,30 +120,24 @@ Edit the `appsettings.json` file and add a connection string for the MySQL datab
 "Server=localhost;Database=issuer;User=issuer-user;Password=issuer-password;"
 ```
 
-Additionally you need to specify in `appsettings.json` a private key that can
-be used for singing tokens. Such a key can be generated with openssl using the
-following command.
+Additionally you need to specify in `appsettings.json` a JSON web key that can
+be used for singing tokens. You can generate such a kwy in pythong using jwcrypto
+and the following script
 
-```bash
-openssl ecparam -name prime256v1 -genkey -noout -out key.pem
+```python
+from jwcrypto import jwt, jwk, jws
+key = jwk.JWK.generate(kty='EC', crv='P-256')
+print (key.export(as_dict=True))
 ```
-
-You can generate the corresponding public key (and use it for example in 
-[VC verifier](https://github.com/mmlab-aueb/py-verifier)) using the following command
-
-```bash
-openssl ec -in key.pem -pubout -out public.pem
-```
-
-**Be careful** you have to put the output of the command in a single line, replacing
-line breaks with '\n', e.g.,
+For example:
 
 ```
-"jws_private_key_pem": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIHCw ...
+"jwk": "{'kty': 'EC', 'kid': 'bZll1NPj1dEI1qmcgM1fML0pszfHxjvfD-psfjY4K50', 'crv': 'P-256', 'x': 'sCp_6IGfDeom0_9TxtLC_4elxsyOe6WLMpRYZDcvNtk', 'y': 'iwgCFXsk5yDXRvoCxMdkzTCI-uGm5lOA8c6zfMPsHi0', 'd': '...'}",
 ```
 
 Finally, you have to specify in `appsettings.json` your issuer identifier (e.g., the
 URL of your issuer).
+
 ### Compile and run
 You can open the source code in Visual Studio or you can use .net sdk to compile it.
 Instructions for compiling and running the project follow. In order to compile
