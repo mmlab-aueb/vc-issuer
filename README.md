@@ -121,7 +121,7 @@ Edit the `appsettings.json` file and add a connection string for the MySQL datab
 ```
 
 Additionally you need to specify in `appsettings.json` a JSON web key that can
-be used for singing tokens. You can generate such a kwy in pythong using jwcrypto
+be used for singing tokens. You can generate such a jwk in python using jwcrypto
 and the following script
 
 ```python
@@ -158,7 +158,7 @@ test records, you can test that everything works by requesting a token using
 the following `curl` command
 
 ```bash
-curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" http://localhost:5001/oauth2/issue/mmlab
+curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" http://localhost:5000/oauth2/issue/mmlab
 ```
 
 **ΝΟΤΕ**
