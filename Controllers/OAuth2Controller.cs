@@ -136,6 +136,9 @@ namespace Issuer.Controllers
                 capabilities[authorization.Operation.Resource.Name].Add(authorization.Operation.OperationId);
 
             }
+            if (capabilities.Count() == 1){
+                payload.Add("aud", capabilities.First().Key);
+            } 
             var vc = new Dictionary<String, Object>()
             {
                 {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://mm.aueb.gr/contexts/capabilities/v1"}},
