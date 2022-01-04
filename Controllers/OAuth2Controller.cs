@@ -132,7 +132,7 @@ namespace Issuer.Controllers
             foreach (var authorization in authorizations)
             {
                 if (!capabilities.ContainsKey(authorization.Operation.Resource.Name))
-                    capabilities.Add(authorization.Operation.Resource.Name, new List<string>());
+                    capabilities.Add(authorization.Operation.Resource.ResourceId, new List<string>());
                 capabilities[authorization.Operation.Resource.Name].Add(authorization.Operation.OperationId);
 
             }

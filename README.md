@@ -43,6 +43,7 @@ CREATE TABLE `Client` (
 | --- | --- |
 | ID | INT, this is the key|
 | Name | Text, a description|
+|ResourceId| Text, a unique identifier for the resource (e.g., URL). This identifier ends up in the generated token
 | OwnerId | Text, an identifier of the owner|
 
 You can generate this table using the following SQL code
@@ -51,6 +52,7 @@ You can generate this table using the following SQL code
 CREATE TABLE `Resource` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` text NOT NULL,
+  `ResourceId` text NOT NULL,
   `OwnerId` text,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;

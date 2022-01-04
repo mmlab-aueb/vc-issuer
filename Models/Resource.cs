@@ -15,6 +15,7 @@ namespace Issuer.Models
         public int ID { get; set; }
         public string Name { get; set; }
         public string OwnerId { get; set; }
+        public string ResourceId { get; set; }
 
         public ICollection<Operation> Operations { get; set; }
     }
