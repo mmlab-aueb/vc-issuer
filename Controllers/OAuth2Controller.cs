@@ -131,9 +131,9 @@ namespace Issuer.Controllers
             var capabilities = new Dictionary<string, List<String>>();
             foreach (var authorization in authorizations)
             {
-                if (!capabilities.ContainsKey(authorization.Operation.Resource.Name))
+                if (!capabilities.ContainsKey(authorization.Operation.Resource.ResourceId))
                     capabilities.Add(authorization.Operation.Resource.ResourceId, new List<string>());
-                capabilities[authorization.Operation.Resource.Name].Add(authorization.Operation.OperationId);
+                capabilities[authorization.Operation.Resource.ResourceId].Add(authorization.Operation.OperationId);
 
             }
             if (capabilities.Count() == 1){
