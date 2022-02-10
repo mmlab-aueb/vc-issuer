@@ -15,9 +15,10 @@ namespace Issuer.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-        public DbSet<Models.Operation> Operation { get; set; }
-        public DbSet<Resource> Resource { get; set; }
-        public DbSet<Client>   Client { get; set; }
-        public DbSet<Authorization> Authorization { get; set; }
+        public DbSet<Client> client { get; set; }
+        public DbSet<Models.Endpoint> endpoint { get; set; }
+        public DbSet<Models.Operation> operation { get; set; }
+        public DbSet<Resource> resource { get; set; }        
+        public DbSet<Authorization> authorization { get; set; }
     }
 }

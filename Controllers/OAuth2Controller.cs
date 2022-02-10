@@ -29,24 +29,24 @@ namespace Issuer.Controllers
         
 
 
-        [Route("oauth2/issue/{userId?}")]
+        [Route("oauth2/issue")]
         [HttpPost]
-        public IActionResult issue(String userId, String grant_type)
+        public IActionResult issue(String grant_type)
         {
-            if (userId == null || grant_type == null)
+            if (grant_type == null)
             {
                 return Unauthorized();
             }
 
             if (grant_type == "client_credentials")
             {
-                (bool isauthorized, int clientId) = authorizeClient(userId);
+                (bool isauthorized, int clientId) = authorizeClient();
                 (bool isauthenticated, object clientKey) = handleDPoP();
                 if (isauthorized && isauthenticated)
                 {
                     handleDPoP();
-                    string vc = createVC(userId, clientId, clientKey);
-                    var response = new Dictionary<string, string>()
+                    List<String> vc = createVCs(clientId, clientKey);
+                    var response = new Dictionary<string, List<string>>()
                     {
                         { "vc", vc},
                     };
@@ -63,14 +63,14 @@ namespace Issuer.Controllers
          * It is used by the client credential grant.
          * It returns the client Id
          */
-        private (bool, int) authorizeClient(String userId)
+        private (bool, int) authorizeClient()
         {
             try
             {
                 var header = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
                 string[] credentials = Encoding.UTF8.GetString(Convert.FromBase64String(header.Parameter)).Split(":");
 
-                var client = _context.Client.Where(q => q.OwnerId == userId && q.ClientId == credentials[0] && q.ClientSecret == credentials[1]).FirstOrDefault();
+                var client = _context.client.Where(q => q.ClientId == credentials[0] && q.ClientSecret == credentials[1]).FirstOrDefault();
                 if (client != null)
                     return (true, client.ID);
                 else
@@ -118,27 +118,72 @@ namespace Issuer.Controllers
 
 
 
-        private String createVC(String userId, int clientId, Object clientKey= null)
+        private List<String> createVCs( int clientId, Object clientKey= null)
         {
-            var authorizations = _context.Authorization
-                .Include(a => a.Client).Include(b => b.Operation).Include(c => c.Operation.Resource)
-                .Where(q => q.ClientID == clientId && q.OwnerId == userId).ToList();
+            var result = new List<String>();
+            var authorizations = _context.authorization
+                .Include(a => a.Client).Include(b => b.Operation).Include(c => c.Operation.Resource).Include(c => c.Operation.Resource.Endpoint)
+                .Where(q => q.ClientID == clientId).ToList();
             var iat = DateTime.UtcNow;
             var exp = DateTime.UtcNow.AddDays(1);
             var iss = _configuration["iss_url"];
             //var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
-            var payload = new JwtPayload(iss, null, new List<Claim>(),null, null);
-            var capabilities = new Dictionary<string, List<String>>();
+            
+            foreach (var endpoint in authorizations.Select(q=>q.Operation.Resource.Endpoint).Distinct())
+            {
+                var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
+                var capabilities = new Dictionary<string, List<String>>();
+                foreach (var resource in endpoint.Resources)
+                {
+                    capabilities.Add(resource.URI, new List<string>());
+                    foreach (var operation in resource.Operations)
+                    {
+                        capabilities[resource.URI].Add(operation.URI);
+                    }
+                }
+                var vc = new Dictionary<String, Object>()
+                {
+                    {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://mm.aueb.gr/contexts/capabilities/v1"}},
+                    {"type", new String[]{ "VerifiableCredential", "CapabilitiesCredential"} },
+                    {
+                        "credentialSubject", new Dictionary<String, Object>()
+                        {
+                            {"capabilities",capabilities}
+                        }
+                    }
+
+                };
+                if (clientKey != null)
+                {
+                    payload.Add("cnf", clientKey);
+                }
+                payload.Add("vc", vc);
+                payload.Add("aud", endpoint.URI);
+                var signingJWK = new JsonWebKey(_configuration["jwk"]);
+                var publicJWK = new JsonWebKey(_configuration["jwk"]);
+                publicJWK.D = null;
+                var jwtHeader = new JwtHeader(
+                    new SigningCredentials(
+                        key: signingJWK,
+                        algorithm: SecurityAlgorithms.EcdsaSha256)
+                    );
+                jwtHeader.Add("jwk", publicJWK);
+                var jwtToken = new JwtSecurityToken(jwtHeader, payload);
+                var jwtTokenHandler = new JwtSecurityTokenHandler();
+                result.Add(jwtTokenHandler.WriteToken(jwtToken));
+            }
+            return result;
+            /*
             foreach (var authorization in authorizations)
             {
-                if (!capabilities.ContainsKey(authorization.Operation.Resource.ResourceId))
-                    capabilities.Add(authorization.Operation.Resource.ResourceId, new List<string>());
-                capabilities[authorization.Operation.Resource.ResourceId].Add(authorization.Operation.OperationId);
+                if (!capabilities.ContainsKey(authorization.Operation.Resource.URI))
+                    capabilities.Add(authorization.Operation.Resource.URI, new List<string>());
+                capabilities[authorization.Operation.Resource.URI].Add(authorization.Operation.URI);
 
             }
-            if (capabilities.Count() == 1){
-                payload.Add("aud", capabilities.First().Key);
-            } 
+            if (authorizations.Count() > 0){
+                payload.Add("aud", authorizations.First().Operation.Resource.Endpoint.URI);
+            }
             var vc = new Dictionary<String, Object>()
             {
                 {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://mm.aueb.gr/contexts/capabilities/v1"}},
@@ -168,6 +213,7 @@ namespace Issuer.Controllers
             var jwtToken = new JwtSecurityToken(jwtHeader, payload);
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             return jwtTokenHandler.WriteToken(jwtToken);
+            */
         }
     }
 }

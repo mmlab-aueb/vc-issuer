@@ -14,10 +14,7 @@ namespace Issuer.Models
         public string Name {get; set;}
         public string ClientId { get; set; }
         public string ClientSecret { get; set; }
-        public string OwnerId { get; set; }
         public ICollection<Authorization> Authorizations { get; set; }
-
-
     }
 
 }

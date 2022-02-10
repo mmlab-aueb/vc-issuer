@@ -15,9 +15,10 @@ namespace Issuer.Models
         [Key]
         public int ID { get; set; }
         public string Name { get; set; }
-        public string OwnerId { get; set; }
-        public string ResourceId { get; set; }
+        public string URI { get; set; }
 
+        public int EndpointID { get; set; }
+        public Endpoint Endpoint { get; set; }
         public ICollection<Operation> Operations { get; set; }
     }
 }

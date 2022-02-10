@@ -7,114 +7,6 @@ This a VC issuer implemented by the [ZeroTrustVC](https://mm.aueb.gr/projects/ze
 The VC issuer is implement in .net 5. Additionally it requires a MySQL database
 for storing information related to clients, resources, operations, and authorizations.
 
-### Configure MySQL
-
-All tables have a field called OwnerId which is the identifier of the owner of a
-table entry. OwnerId is included in the URL of every request to the VC issuer.
-
-The VC issuer requires the following tables in your database
-
-**client**
-
-| Name | Value |
-| --- | --- |
-| ID | INT, this is the key|
-| Name | Text, a description|
-| ClientId | Text, a unique identifier|
-| ClientSecret | Text, a client secret|
-| OwnerId | Text, an identifier of the owner|
-
-You can generate this table using the following SQL code
-
-```sql
-CREATE TABLE `Client` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` text,
-  `ClientId` text,
-  `ClientSecret` text,
-  `OwnerId` text,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-```
-
-**resource**
-
-| Name | Value |
-| --- | --- |
-| ID | INT, this is the key|
-| Name | Text, a description|
-|ResourceId| Text, a unique identifier for the resource (e.g., URL). This identifier ends up in the generated token
-| OwnerId | Text, an identifier of the owner|
-
-You can generate this table using the following SQL code
-
-```sql
-CREATE TABLE `Resource` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` text NOT NULL,
-  `ResourceId` text NOT NULL,
-  `OwnerId` text,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-```
-**operation**
-
-| Name | value |
-| --- | --- |
-| ID | INT, this is the key|
-| Name | Text, a description|
-| OperationId | text, a unique identifier for the endpoint. This identifier ends up in the generated token|
-| OwnerId | Text, an identifier of the owner|
-| ResourceID | INT, foreign key to the resource table|
-
-You can generate this table using the following SQL code
-
-```sql
-CREATE TABLE `Operation` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` text NOT NULL,
-  `OperationId` text NOT NULL,
-  `OwnerId` text,
-  `ResourceID` int(11) NOT NULL,
-  PRIMARY KEY (`ID`),
-  KEY `IX_Endpoint_ResourceID` (`ResourceID`),
-  CONSTRAINT `FK_Endpoint_Resource_ResourceID` FOREIGN KEY (`ResourceID`) REFERENCES `resource` (`ID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-```
-
-**authorization**
-
-| Name | value |
-| --- | --- |
-| ID | INT, this is the key|
-| OwnerId | Text, an identifier of the owner|
-| ClientID | INT, foreign key to the resource table|
-| OperationID | INT, foreign key to the operation table|
-
-You can generate this table using the following SQL code
-
-```sql
-CREATE TABLE `Authorization` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `OwnerId` text,
-  `ClientID` int(11) NOT NULL,
-  `OperationID` int(11) NOT NULL,
-  PRIMARY KEY (`ID`),
-  KEY `IX_Authorization_ClientID` (`ClientID`),
-  KEY `IX_Authorization_OperationID` (`OperationID`),
-  CONSTRAINT `FK_Authorization_Client_ClientID` FOREIGN KEY (`ClientID`) REFERENCES `client` (`ID`) ON DELETE CASCADE,
-  CONSTRAINT `FK_Authorization_Endpoint_OperationID` FOREIGN KEY (`OperationID`) REFERENCES `operation` (`ID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-```
-
-The following SQL script can be used for inserting testing data (for the operation and authorization
-entries you may have to enter correct values for the foreign keys)
-```sql
-INSERT INTO client (Name, ClientId, ClientSecret, OwnerId) VALUES ('Test wallet','wallet','qwerty','mmlab');
-INSERT INTO resource (Name, OwnerId) VALUES ('Cloud storage','mmlab');
-INSERT INTO operation (Name, OperationId,  OwnerId, ResourceID) VALUES ('Read Files','FL_READ','mmlab','2');
-INSERT INTO authorization (OwnerId, ClientID, OperationID ) VALUES ('mmlab','2', '4');
-```
 ### Configuration
 Edit the `appsettings.json` file and add a connection string for the MySQL database. For example:
 
@@ -139,6 +31,27 @@ For example:
 
 Finally, you have to specify in `appsettings.json` your issuer identifier (e.g., the
 URL of your issuer).
+
+### Create database
+
+**NOTE** The following will delete any existing tables.
+
+From the project folder run:
+
+```
+dotnet ef database update
+```
+
+The following SQL statements can be used as test data (it is assumed that the created tables are empty).
+
+```sql
+INSERT INTO endpoint (ID, Name, URI) VALUES ('1', 'Cloud Storage', 'https://www.example.com/cloud');
+INSERT INTO client (ID, Name, ClientId, ClientSecret) VALUES ('1', 'Test wallet','wallet','qwerty');
+INSERT INTO resource (ID, Name, URI, EndpointID) VALUES ('1','Folders in Cloud Storage', 'Folder','1');
+INSERT INTO operation (ID, Name, URI, ResourceID) VALUES ('1','List items', 'List','1');
+INSERT INTO authorization (ID, ClientID, OperationID) VALUES ('1','1', '1');
+```
+
 
 ### Compile and run
 You can open the source code in Visual Studio or you can use .net sdk to compile it.
