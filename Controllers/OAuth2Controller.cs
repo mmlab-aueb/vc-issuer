@@ -57,6 +57,34 @@ namespace Issuer.Controllers
             return Unauthorized();
         }
 
+        /*
+         * Returns the revocation list
+         */ 
+        [Route("oauth2/status")]
+        [HttpGet]
+        public IActionResult status()
+        {
+            /*
+             * Still in progress
+             * It generates a revocation list with the
+             * 9th VC revoked
+             */
+            
+            byte[] bytes = new byte[500]; //It holds 4K VCs
+            int bitindex = 9; //VC with index 9 is revoked. Note the first index is 0
+            int index = bitindex / 8;
+            int bit = bitindex % 8;
+            byte mask = (byte)(1 << bit);
+            bytes[1] |= mask;
+            var s = Convert.ToBase64String(bytes);
+            /*
+             * Created and sign the revocation list
+             */
+            var response = createRevocationList(s);
+            return Ok(response);
+
+        }
+
 
         /*
          * It checks is a client is authorized based on the Authorize HTTP header.
@@ -214,6 +242,30 @@ namespace Issuer.Controllers
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             return jwtTokenHandler.WriteToken(jwtToken);
             */
+        }
+
+        private String createRevocationList(String bitstring64)
+        {
+       
+
+            var iat = DateTime.UtcNow;
+            var exp = DateTime.UtcNow.AddDays(1);
+            var iss = _configuration["iss_url"];
+            var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
+            payload.Add("RevocationList", bitstring64);
+            var signingJWK = new JsonWebKey(_configuration["jwk"]);
+            var publicJWK = new JsonWebKey(_configuration["jwk"]);
+            publicJWK.D = null;
+            var jwtHeader = new JwtHeader(
+                new SigningCredentials(
+                    key: signingJWK,
+                    algorithm: SecurityAlgorithms.EcdsaSha256)
+                );
+            jwtHeader.Add("jwk", publicJWK);
+            var jwtToken = new JwtSecurityToken(jwtHeader, payload);
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            return jwtTokenHandler.WriteToken(jwtToken);
+           
         }
     }
 }

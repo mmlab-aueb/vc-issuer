@@ -41,6 +41,7 @@ From the project folder run:
 ```
 dotnet ef database update
 ```
+If `ef` is not available, install it using  the command `dotnet tool install --global dotnet-ef`
 
 The following SQL statements can be used as test data (it is assumed that the created tables are empty).
 
