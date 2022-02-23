@@ -152,8 +152,8 @@ namespace Issuer.Controllers
             var authorizations = _context.authorization
                 .Include(a => a.Client).Include(b => b.Operation).Include(c => c.Operation.Resource).Include(c => c.Operation.Resource.Endpoint)
                 .Where(q => q.ClientID == clientId).ToList();
-            var iat = DateTime.UtcNow;
-            var exp = DateTime.UtcNow.AddDays(1);
+            var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var exp = DateTimeOffset.UtcNow.AddDays(15).ToUnixTimeSeconds();
             var iss = _configuration["iss_url"];
             //var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
             
@@ -185,8 +185,10 @@ namespace Issuer.Controllers
                 {
                     payload.Add("cnf", clientKey);
                 }
-                payload.Add("vc", vc);
                 payload.Add("aud", endpoint.URI);
+                payload.Add("iat", iat);
+                payload.Add("exp", exp);
+                payload.Add("vc", vc);
                 var signingJWK = new JsonWebKey(_configuration["jwk"]);
                 var publicJWK = new JsonWebKey(_configuration["jwk"]);
                 publicJWK.D = null;
@@ -249,7 +251,7 @@ namespace Issuer.Controllers
        
 
             var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var exp = DateTime.UtcNow.AddDays(1);
+            var exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
             var iss = _configuration["iss_url"];
             var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
             payload.Add("RevocationList", bitstring64);
