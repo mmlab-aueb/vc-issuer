@@ -186,8 +186,8 @@ namespace Issuer.Controllers
                     payload.Add("cnf", clientKey);
                 }
                 payload.Add("aud", endpoint.URI);
-                payload.Add("iat", iat);
-                payload.Add("exp", exp);
+                //payload.Add("iat", iat);
+                //payload.Add("exp", exp);
                 payload.Add("vc", vc);
                 var signingJWK = new JsonWebKey(_configuration["jwk"]);
                 var publicJWK = new JsonWebKey(_configuration["jwk"]);
