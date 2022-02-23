@@ -248,11 +248,12 @@ namespace Issuer.Controllers
         {
        
 
-            var iat = DateTime.UtcNow;
+            var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var exp = DateTime.UtcNow.AddDays(1);
             var iss = _configuration["iss_url"];
             var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
             payload.Add("RevocationList", bitstring64);
+            payload.Add("iat", iat);
             var signingJWK = new JsonWebKey(_configuration["jwk"]);
             var publicJWK = new JsonWebKey(_configuration["jwk"]);
             publicJWK.D = null;
