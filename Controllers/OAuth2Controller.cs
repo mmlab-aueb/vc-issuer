@@ -156,17 +156,25 @@ namespace Issuer.Controllers
             var exp = DateTimeOffset.UtcNow.AddDays(15).ToUnixTimeSeconds();
             var iss = _configuration["iss_url"];
             //var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
-            
+            SHA256 hash = SHA256.Create();
             foreach (var endpoint in authorizations.Select(q=>q.Operation.Resource.Endpoint).Distinct())
             {
+                /*
+                 * The VC identifier (jti) is the hash of the wallet Id appended with the Id of the authorized
+                 * resources. Therefore, two VCs for the same wallet that include the same authorizations will
+                 * have the same jti
+                 */ 
+                string jti = "";
+                jti += clientId.ToString();
                 var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
                 var capabilities = new Dictionary<string, List<String>>();
-                foreach (var resource in endpoint.Resources)
+                foreach (var resource in endpoint.Resources.OrderBy(q=>q.ID))
                 {
                     capabilities.Add(resource.URI, new List<string>());
-                    foreach (var operation in resource.Operations)
+                    foreach (var operation in resource.Operations.OrderBy(q => q.ID))
                     {
                         capabilities[resource.URI].Add(operation.URI);
+                        jti += operation.ID.ToString();
                     }
                 }
                 var vc = new Dictionary<String, Object>()
@@ -185,9 +193,10 @@ namespace Issuer.Controllers
                 {
                     payload.Add("cnf", clientKey);
                 }
+                payload.Add("jti", Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(jti))));
                 payload.Add("aud", endpoint.URI);
-                //payload.Add("iat", iat);
-                //payload.Add("exp", exp);
+                payload.Add("iat", iat);
+                payload.Add("exp", exp);
                 payload.Add("vc", vc);
                 var signingJWK = new JsonWebKey(_configuration["jwk"]);
                 var publicJWK = new JsonWebKey(_configuration["jwk"]);
@@ -203,47 +212,6 @@ namespace Issuer.Controllers
                 result.Add(jwtTokenHandler.WriteToken(jwtToken));
             }
             return result;
-            /*
-            foreach (var authorization in authorizations)
-            {
-                if (!capabilities.ContainsKey(authorization.Operation.Resource.URI))
-                    capabilities.Add(authorization.Operation.Resource.URI, new List<string>());
-                capabilities[authorization.Operation.Resource.URI].Add(authorization.Operation.URI);
-
-            }
-            if (authorizations.Count() > 0){
-                payload.Add("aud", authorizations.First().Operation.Resource.Endpoint.URI);
-            }
-            var vc = new Dictionary<String, Object>()
-            {
-                {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://mm.aueb.gr/contexts/capabilities/v1"}},
-                {"type", new String[]{ "VerifiableCredential", "CapabilitiesCredential"} },
-                {
-                    "credentialSubject", new Dictionary<String, Object>()
-                    {
-                        {"capabilities",capabilities}
-                    } 
-                }
-
-            };
-            if (clientKey != null)
-            {
-                payload.Add("cnf", clientKey);
-            }
-            payload.Add("vc", vc);
-            var signingJWK = new JsonWebKey(_configuration["jwk"]);
-            var publicJWK = new JsonWebKey(_configuration["jwk"]);
-            publicJWK.D = null;
-            var jwtHeader = new JwtHeader(
-                new SigningCredentials(
-                    key: signingJWK,
-                    algorithm: SecurityAlgorithms.EcdsaSha256)
-                );
-            jwtHeader.Add("jwk", publicJWK);
-            var jwtToken = new JwtSecurityToken(jwtHeader, payload);
-            var jwtTokenHandler = new JwtSecurityTokenHandler();
-            return jwtTokenHandler.WriteToken(jwtToken);
-            */
         }
 
         private String createRevocationList(String bitstring64)
