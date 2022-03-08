@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Issuer.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -157,6 +158,7 @@ namespace Issuer.Controllers
             var iss = _configuration["iss_url"];
             //var payload = new JwtPayload(iss, null, new List<Claim>(), iat, exp);
             SHA256 hash = SHA256.Create();
+
             foreach (var endpoint in authorizations.Select(q=>q.Operation.Resource.Endpoint).Distinct())
             {
                 /*
@@ -210,6 +212,31 @@ namespace Issuer.Controllers
                 var jwtToken = new JwtSecurityToken(jwtHeader, payload);
                 var jwtTokenHandler = new JwtSecurityTokenHandler();
                 result.Add(jwtTokenHandler.WriteToken(jwtToken));
+                //Strore the credential in the DB
+                var credential = _context.credential.Where(q => q.jti == jti).FirstOrDefault();
+                if (credential == null)
+                {
+                    credential = new Models.Credential()
+                    {
+                        jti = jti,
+                        aud = endpoint.URI,
+                        iat = iat,
+                        exp = exp,
+                        type = "CapabilitiesCredential",
+                        isRevoked = false,
+                        payload = JsonSerializer.Serialize(vc)
+                    };
+                    _context.Add(credential);
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    credential.iat = iat;
+                    credential.exp = exp;
+                    _context.Update(credential);
+                    _context.SaveChanges();
+
+                }
             }
             return result;
         }

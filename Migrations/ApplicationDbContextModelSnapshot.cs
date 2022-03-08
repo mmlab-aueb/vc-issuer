@@ -57,6 +57,40 @@ namespace vc_issuer.Migrations
                     b.ToTable("client");
                 });
 
+            modelBuilder.Entity("Issuer.Models.Credential", b =>
+                {
+                    b.Property<string>("jti")
+                        .HasColumnType("varchar(767)");
+
+                    b.Property<string>("aud")
+                        .HasColumnType("text");
+
+                    b.Property<long>("exp")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("iat")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("isRevoked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("payload")
+                        .HasColumnType("text");
+
+                    b.Property<int>("revocationIndex")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("type")
+                        .HasColumnType("text");
+
+                    b.HasKey("jti");
+
+                    b.HasAlternateKey("revocationIndex");
+
+                    b.ToTable("credential");
+                });
+
             modelBuilder.Entity("Issuer.Models.Endpoint", b =>
                 {
                     b.Property<int>("ID")

@@ -23,6 +23,26 @@ namespace vc_issuer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "credential",
+                columns: table => new
+                {
+                    jti = table.Column<string>(type: "varchar(767)", nullable: false),
+                    exp = table.Column<long>(type: "bigint", nullable: false),
+                    iat = table.Column<long>(type: "bigint", nullable: false),
+                    aud = table.Column<string>(type: "text", nullable: true),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    payload = table.Column<string>(type: "text", nullable: true),
+                    isRevoked = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    revocationIndex = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_credential", x => x.jti);
+                    table.UniqueConstraint("AK_credential_revocationIndex", x => x.revocationIndex);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "endpoint",
                 columns: table => new
                 {
@@ -129,6 +149,9 @@ namespace vc_issuer.Migrations
         {
             migrationBuilder.DropTable(
                 name: "authorization");
+
+            migrationBuilder.DropTable(
+                name: "credential");
 
             migrationBuilder.DropTable(
                 name: "client");

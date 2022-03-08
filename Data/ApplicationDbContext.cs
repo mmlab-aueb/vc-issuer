@@ -20,5 +20,12 @@ namespace Issuer.Data
         public DbSet<Models.Operation> operation { get; set; }
         public DbSet<Resource> resource { get; set; }        
         public DbSet<Authorization> authorization { get; set; }
+        public DbSet<Credential> credential { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Credential>()
+                .HasAlternateKey(c => c.revocationIndex);
+        }
     }
 }
