@@ -27,12 +27,9 @@ namespace Issuer.Controllers
             _configuration = configuration;
         }
 
-        
-
-
         [Route("oauth2/issue")]
         [HttpPost]
-        public IActionResult issue(String grant_type)
+        public IActionResult Issue(String grant_type)
         {
             if (grant_type == null)
             {
@@ -41,12 +38,12 @@ namespace Issuer.Controllers
 
             if (grant_type == "client_credentials")
             {
-                (bool isauthorized, int clientId) = authorizeClient();
-                (bool isauthenticated, object clientKey) = handleDPoP();
+                (bool isauthorized, int clientId) = AuthorizeClient();
+                (bool isauthenticated, object clientKey) = HandleDPoP();
                 if (isauthorized && isauthenticated)
                 {
-                    handleDPoP();
-                    List<String> vc = createVCs(clientId, clientKey);
+                    HandleDPoP();
+                    List<String> vc = CreateVCs(clientId, clientKey);
                     var response = new Dictionary<string, List<string>>()
                     {
                         { "vc", vc},
@@ -58,33 +55,6 @@ namespace Issuer.Controllers
             return Unauthorized();
         }
 
-        /*
-         * Returns the revocation list
-         */ 
-        [Route("oauth2/status")]
-        [HttpGet]
-        public IActionResult status()
-        {
-            /*
-             * Still in progress
-             * It generates a revocation list with the
-             * 9th VC revoked
-             */
-            
-            byte[] bytes = new byte[500]; //It holds 4K VCs
-            int bitindex = 9; //VC with index 9 is revoked. Note the first index is 0
-            int index = bitindex / 8;
-            int bit = bitindex % 8;
-            byte mask = (byte)(1 << bit);
-            bytes[1] |= mask;
-            var s = Convert.ToBase64String(bytes);
-            /*
-             * Created and sign the revocation list
-             */
-            var response = createRevocationList(s);
-            return Ok(response);
-
-        }
 
 
         /*
@@ -92,7 +62,7 @@ namespace Issuer.Controllers
          * It is used by the client credential grant.
          * It returns the client Id
          */
-        private (bool, int) authorizeClient()
+        private (bool, int) AuthorizeClient()
         {
             try
             {
@@ -117,7 +87,7 @@ namespace Issuer.Controllers
          * If there is a valid DPoP header it returns true and the client key
          * If ther is an invlaid DPoP header it returns false
          */
-        private (bool, Object) handleDPoP()
+        private (bool, Object) HandleDPoP()
         {
             try
             {
@@ -145,9 +115,7 @@ namespace Issuer.Controllers
 
         }
 
-
-
-        private List<String> createVCs( int clientId, Object clientKey= null)
+        private List<String> CreateVCs( int clientId, Object clientKey= null)
         {
             var result = new List<String>();
             var authorizations = _context.authorization
@@ -240,30 +208,6 @@ namespace Issuer.Controllers
             }
             return result;
         }
-
-        private String createRevocationList(String bitstring64)
-        {
-       
-
-            var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
-            var iss = _configuration["iss_url"];
-            var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
-            payload.Add("RevocationList", bitstring64);
-            payload.Add("iat", iat);
-            var signingJWK = new JsonWebKey(_configuration["jwk"]);
-            var publicJWK = new JsonWebKey(_configuration["jwk"]);
-            publicJWK.D = null;
-            var jwtHeader = new JwtHeader(
-                new SigningCredentials(
-                    key: signingJWK,
-                    algorithm: SecurityAlgorithms.EcdsaSha256)
-                );
-            jwtHeader.Add("jwk", publicJWK);
-            var jwtToken = new JwtSecurityToken(jwtHeader, payload);
-            var jwtTokenHandler = new JwtSecurityTokenHandler();
-            return jwtTokenHandler.WriteToken(jwtToken);
-           
-        }
+        
     }
 }
