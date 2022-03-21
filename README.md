@@ -81,3 +81,6 @@ curl --insecure -i -u wallet:qwerty -X POST -H "Content-Type: application/x-www-
 
 VC issuer should be installed behind a proxy, which will support HTTPS (see
 for example the instructions [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-apache?view=aspnetcore-5.0)).
+
+## GUI
+You can use [vc-issuer-gui](https://github.com/mmlab-aueb/vc-issuer-gui) for managing VC issuer.
