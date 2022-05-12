@@ -136,7 +136,6 @@ namespace Issuer.Controllers
                  */ 
                 string jti = "";
                 jti += clientId.ToString();
-                var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
                 var capabilities = new Dictionary<string, List<String>>();
                 foreach (var resource in endpoint.Resources.OrderBy(q=>q.ID))
                 {
@@ -159,27 +158,7 @@ namespace Issuer.Controllers
                     }
 
                 };
-                if (clientKey != null)
-                {
-                    payload.Add("cnf", clientKey);
-                }
-                payload.Add("jti", Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(jti))));
-                payload.Add("aud", endpoint.URI);
-                payload.Add("iat", iat);
-                payload.Add("exp", exp);
-                payload.Add("vc", vc);
-                var signingJWK = new JsonWebKey(_configuration["jwk"]);
-                var publicJWK = new JsonWebKey(_configuration["jwk"]);
-                publicJWK.D = null;
-                var jwtHeader = new JwtHeader(
-                    new SigningCredentials(
-                        key: signingJWK,
-                        algorithm: SecurityAlgorithms.EcdsaSha256)
-                    );
-                jwtHeader.Add("jwk", publicJWK);
-                var jwtToken = new JwtSecurityToken(jwtHeader, payload);
-                var jwtTokenHandler = new JwtSecurityTokenHandler();
-                result.Add(jwtTokenHandler.WriteToken(jwtToken));
+                
                 //Strore the credential in the DB
                 var credential = _context.credential.Where(q => q.jti == jti).FirstOrDefault();
                 if (credential == null)
@@ -205,7 +184,36 @@ namespace Issuer.Controllers
                     _context.SaveChanges();
 
                 }
+                //Revocation information
+                vc["credentialStatus"] = new Dictionary<String, Object>() {
+                    {"type", "RevocationList2021Status" },
+                    { "statusListIndex", credential.revocationIndex % 2000},
+                    {"statusListCredential", "https://issuer.mmlab.edu.gr/credential/status" }
+                };
+                var payload = new JwtPayload(iss, null, new List<Claim>(), null, null);
+                if (clientKey != null)
+                {
+                    payload.Add("cnf", clientKey);
+                }
+                payload.Add("jti", Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(jti))));
+                payload.Add("aud", endpoint.URI);
+                payload.Add("iat", iat);
+                payload.Add("exp", exp);
+                payload.Add("vc", vc);
+                var signingJWK = new JsonWebKey(_configuration["jwk"]);
+                var publicJWK = new JsonWebKey(_configuration["jwk"]);
+                publicJWK.D = null;
+                var jwtHeader = new JwtHeader(
+                    new SigningCredentials(
+                        key: signingJWK,
+                        algorithm: SecurityAlgorithms.EcdsaSha256)
+                    );
+                jwtHeader.Add("jwk", publicJWK);
+                var jwtToken = new JwtSecurityToken(jwtHeader, payload);
+                var jwtTokenHandler = new JwtSecurityTokenHandler();
+                result.Add(jwtTokenHandler.WriteToken(jwtToken));
             }
+
             return result;
         }
         

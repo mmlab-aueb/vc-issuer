@@ -27,7 +27,21 @@ namespace Issuer.Controllers
         [Route("credential/status")]
         public IActionResult Status()
         {
-            return Ok();
+            byte[] bytes = new byte[2000]; //It holds 16K VCs. This the the mimimum size according to https://w3c-ccg.github.io/vc-status-list-2021/#revocationlist2021status
+            var exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+            List<int> indexes = _context.credential.Where(q => q.exp > exp && q.isRevoked == true).Select(q => q.revocationIndex).ToList();
+            foreach (int bitindex  in indexes) { 
+            int index = bitindex / 8;
+            int bit = bitindex % 8;
+            byte mask = (byte)(1 << bit);
+            bytes[index] |= mask;
+            }
+            var s = Convert.ToBase64String(bytes);
+            /*
+             * Created and sign the revocation list
+             */
+            var response = createRevocationList(s);
+            return Ok(response);
         }
 
         /*
