@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using Issuer.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -161,6 +162,7 @@ namespace Issuer.Controllers
                 
                 //Strore the credential in the DB
                 var credential = _context.credential.Where(q => q.jti == jti).FirstOrDefault();
+                jti = WebEncoders.Base64UrlEncode(hash.ComputeHash(Encoding.UTF8.GetBytes(jti)));
                 if (credential == null)
                 {
                     credential = new Models.Credential()
@@ -195,7 +197,7 @@ namespace Issuer.Controllers
                 {
                     payload.Add("cnf", clientKey);
                 }
-                payload.Add("jti", Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(jti))));
+                payload.Add("jti", jti);
                 payload.Add("aud", endpoint.URI);
                 payload.Add("iat", iat);
                 payload.Add("exp", exp);
