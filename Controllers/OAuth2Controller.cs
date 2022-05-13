@@ -182,7 +182,7 @@ namespace Issuer.Controllers
                 {
                     credential.iat = iat;
                     credential.exp = exp;
-                    isRevoked = false,
+                    isRevoked = false;
                     _context.Update(credential);
                     _context.SaveChanges();
 
