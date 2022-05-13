@@ -161,8 +161,8 @@ namespace Issuer.Controllers
                 };
                 
                 //Strore the credential in the DB
-                var credential = _context.credential.Where(q => q.jti == jti).FirstOrDefault();
                 jti = WebEncoders.Base64UrlEncode(hash.ComputeHash(Encoding.UTF8.GetBytes(jti)));
+                var credential = _context.credential.Where(q => q.jti == jti).FirstOrDefault();
                 if (credential == null)
                 {
                     credential = new Models.Credential()
