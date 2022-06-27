@@ -1,11 +1,19 @@
 # VC issuer
-This a VC issuer implemented by the [ZeroTrustVC](https://mm.aueb.gr/projects/zerotrustvc) project.
+## About
+A VC Issuer that can be accessed using OAuth 2.0
+
+## Research
+* The VC Issuer  was created by the [ZeroTrustVC](https://mm.aueb.gr/projects/zerotrustvc) project and it is used by the [SelectShare](https://mm.aueb.gr/projects/selectshare) project.
+* The following publications are based on VC Issuer
+   * N. Fotiou, E. Faltaka, V. Kalos, A. Kefala, I. Pittaras, V. A. Siris, G. C. Polyzos, "Continuous authorization over HTTP using Verifiable Credentials and OAuth 2.0", in Open Identity Summit 2022 (OID2022), 2022
+   * N. Fotiou, V. A. Siris, G. C. Polyzos, Y. Kortesniemi, D. Lagutin, "Capabilities-based access control for IoT devices using Verifiable Credentials", in IEEE Symposium on Security and Privacy Workshops, Workshop on the Internet of Safe Things (SafeThings), 2022  
+   * N. Fotiou, V.A. Siris, G.C. Polyzos, "Capability-based access control for multi-tenant systems using Oauth 2.0 and Verifiable Credentials," Proc. 30th International Conference on Computer Communications and Networks (ICCCN), Athens, Greece, July 2021
 
 ## Usage
 
 ### Prerequisites
-The VC issuer is implement in .net 5. Additionally it requires a MySQL database
-for storing information related to clients, resources, operations, and authorizations.
+The VC issuer is implemented as .net 6 web application. Additionally, it requires a 
+MySQL database for storing information related to clients, resources, operations, and authorizations.
 
 ### Configuration
 Edit the `appsettings.json` file and add a connection string for the MySQL database. For example:
