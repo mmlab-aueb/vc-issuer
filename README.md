@@ -9,6 +9,12 @@ A VC Issuer that can be accessed using OAuth 2.0
    * N. Fotiou, V. A. Siris, G. C. Polyzos, Y. Kortesniemi, D. Lagutin, "Capabilities-based access control for IoT devices using Verifiable Credentials", in IEEE Symposium on Security and Privacy Workshops, Workshop on the Internet of Safe Things (SafeThings), 2022  
    * N. Fotiou, V.A. Siris, G.C. Polyzos, "Capability-based access control for multi-tenant systems using Oauth 2.0 and Verifiable Credentials," Proc. 30th International Conference on Computer Communications and Networks (ICCCN), Athens, Greece, July 2021
 
+## Features
+*	It produces "Capabilities" VCs that describe the operations that a VC holder can perform over the resources of a protected endpoint.
+*	It supports JWT-encoded VCs
+*	It can be accessed using standard OAuth 2.0.
+*	Clients can specify the key to be included in a VC using either [DPoP](https://oauth.net/2/dpop/) or [RAR](https://oauth.net/2/rich-authorization-requests/), and they can specify a DID to be included in a VC using RAR.
+
 ## Usage
 
 ### Prerequisites
