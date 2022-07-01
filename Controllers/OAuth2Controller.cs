@@ -77,7 +77,9 @@ namespace Issuer.Controllers
                    string vc = CreateVC(id, clientId, authorization_details);
                     var response = new Dictionary<string, string>()
                     {
-                        { "token", vc},
+                        { "access_token", vc},
+                        { "token_type","bearer" },
+                        { "expires_in","1296000" },
                     };
                     return Ok(response);
                 }
