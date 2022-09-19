@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Diagnostics;
 using System.Linq;
+using vc_issuer.Models.acl;
 
 namespace Issuer.Data
 {
@@ -16,8 +17,8 @@ namespace Issuer.Data
         {
         }
         public DbSet<Client> client { get; set; }
-        public DbSet<Models.Endpoint> endpoint { get; set; }
-        public DbSet<Models.Operation> operation { get; set; }
+        public DbSet<vc_issuer.Models.acl.Endpoint> endpoint { get; set; }
+        public DbSet<Operation> operation { get; set; }
         public DbSet<Resource> resource { get; set; }        
         public DbSet<Authorization> authorization { get; set; }
         public DbSet<Credential> credential { get; set; }

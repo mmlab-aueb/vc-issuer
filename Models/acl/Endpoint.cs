@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
-namespace Issuer.Models
+namespace vc_issuer.Models.acl
 {
     public class Endpoint
     {

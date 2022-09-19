@@ -20,7 +20,7 @@ rar = {
 # Prepare the request
 print(rar)
 data    = {"grant_type":"client_credentials", "authorization_details":json.dumps(rar)}
-issuer  =  "http://localhost:5000/oauth2/token/1" 
+issuer  =  "http://localhost:5000/oauth2/token/4" 
 auth    =  ("wallet","qwerty") 
 headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 response  = requests.post(issuer, auth=auth, headers = headers, data=data)
